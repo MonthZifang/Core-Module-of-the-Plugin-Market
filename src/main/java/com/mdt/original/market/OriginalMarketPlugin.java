@@ -12,7 +12,7 @@ import java.io.IOException;
 import mindustry.mod.Plugin;
 
 public final class OriginalMarketPlugin extends Plugin {
-    private static final String CONFIG_FOLDER_NAME = "Core Module of the Plugin Market";
+    private static final String CONFIG_FOLDER_NAME = "core-module-of-the-plugin-market";
 
     private MarketSettings settings;
     private MarketService service;
