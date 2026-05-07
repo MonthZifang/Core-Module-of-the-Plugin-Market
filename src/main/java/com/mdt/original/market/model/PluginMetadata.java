@@ -7,8 +7,10 @@ import java.util.List;
 public final class PluginMetadata {
     private final String name;
     private final String displayName;
+    private final String displayNameZh;
     private final String author;
     private final String description;
+    private final String descriptionZh;
     private final String version;
     private final String requiredMarketVersion;
     private final String channel;
@@ -21,8 +23,10 @@ public final class PluginMetadata {
     private PluginMetadata(
         String name,
         String displayName,
+        String displayNameZh,
         String author,
         String description,
+        String descriptionZh,
         String version,
         String requiredMarketVersion,
         String channel,
@@ -34,8 +38,10 @@ public final class PluginMetadata {
     ) {
         this.name = name;
         this.displayName = displayName;
+        this.displayNameZh = displayNameZh;
         this.author = author;
         this.description = description;
+        this.descriptionZh = descriptionZh;
         this.version = version;
         this.requiredMarketVersion = requiredMarketVersion;
         this.channel = channel;
@@ -50,8 +56,10 @@ public final class PluginMetadata {
         return new PluginMetadata(
             root.getString("name", ""),
             root.getString("displayName", root.getString("name", "")),
+            root.getString("displayNameZh", ""),
             root.getString("author", ""),
             root.getString("description", ""),
+            root.getString("descriptionZh", ""),
             root.getString("version", ""),
             root.getString("requiredMarketVersion", root.getString("version", "")),
             root.getString("channel", ""),
@@ -96,6 +104,14 @@ public final class PluginMetadata {
         return description;
     }
 
+    public String displayNameZh() {
+        return displayNameZh;
+    }
+
+    public String descriptionZh() {
+        return descriptionZh;
+    }
+
     public String version() {
         return version;
     }
@@ -126,5 +142,13 @@ public final class PluginMetadata {
 
     public String entry() {
         return entry;
+    }
+
+    public String preferredDisplayName() {
+        return displayNameZh == null || displayNameZh.trim().isEmpty() ? displayName : displayNameZh;
+    }
+
+    public String preferredDescription() {
+        return descriptionZh == null || descriptionZh.trim().isEmpty() ? description : descriptionZh;
     }
 }

@@ -71,7 +71,27 @@ public final class OriginalMarketPlugin extends Plugin {
         handler.register("market-list", "列出插件市场中的全部插件。", args -> {
             try {
                 for (RegistryEntry entry : service.registryEntries()) {
-                    Log.info("[@] @ | @ | @", entry.channel(), entry.name(), entry.displayName(), entry.gitRepository());
+                    try {
+                        PluginMetadata metadata = service.resolvePluginMetadata(entry.name());
+                        Log.info(
+                            "登记名=@ | 插件名=@ | 显示名=@ | 作者=@ | 版本=@ | 简介=@",
+                            entry.name(),
+                            metadata.name(),
+                            metadata.preferredDisplayName(),
+                            metadata.author(),
+                            metadata.version(),
+                            metadata.preferredDescription()
+                        );
+                    } catch (Exception metadataException) {
+                        Log.info(
+                            "登记名=@ | 显示名=@ | 分类=@ | 仓库=@ | 元数据读取失败=@",
+                            entry.name(),
+                            entry.displayName(),
+                            entry.channel(),
+                            entry.gitRepository(),
+                            metadataException.getMessage()
+                        );
+                    }
                 }
             } catch (Exception exception) {
                 Log.err("读取市场失败: @", exception.getMessage());
@@ -80,15 +100,16 @@ public final class OriginalMarketPlugin extends Plugin {
 
         handler.register("market-info", "<name>", "查看指定插件的详细信息。", args -> {
             try {
+                RegistryEntry entry = service.catalog().get(args[0]);
                 PluginMetadata metadata = service.resolvePluginMetadata(args[0]);
-                Log.info(
-                    "name=@ version=@ requiredMarketVersion=@ author=@ targets=@",
-                    metadata.name(),
-                    metadata.version(),
-                    metadata.requiredMarketVersion(),
-                    metadata.author(),
-                    metadata.targets()
-                );
+                if (entry != null) {
+                    Log.info("登记名=@ | 登记显示名=@ | 登记分类=@ | 登记仓库=@", entry.name(), entry.displayName(), entry.channel(), entry.gitRepository());
+                }
+                Log.info("插件名=@ | 显示名=@ | 作者=@", metadata.name(), metadata.preferredDisplayName(), metadata.author());
+                Log.info("版本=@ | 需求市场版本=@ | 分类=@ | 目标端=@", metadata.version(), metadata.requiredMarketVersion(), metadata.channel(), metadata.targets());
+                Log.info("简介=@", metadata.preferredDescription());
+                Log.info("依赖=@ | 入口类=@ | 仓库=@", metadata.dependencies(), metadata.entry(), metadata.repositoryUrl());
+                Log.info("下载链接=@", metadata.downloadUrls());
             } catch (Exception exception) {
                 Log.err("查看插件信息失败: @", exception.getMessage());
             }

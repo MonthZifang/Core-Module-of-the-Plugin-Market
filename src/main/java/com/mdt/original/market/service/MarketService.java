@@ -11,6 +11,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
+import java.net.URI;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -123,7 +127,7 @@ public final class MarketService {
 
     private void download(String url, File destination) throws IOException {
         if (url.startsWith("http://") || url.startsWith("https://")) {
-            try (java.io.InputStream inputStream = new java.net.URL(url).openStream()) {
+            try (java.io.InputStream inputStream = openRemoteStream(url)) {
                 java.nio.file.Files.copy(inputStream, destination.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
             }
             return;
@@ -140,6 +144,32 @@ public final class MarketService {
             throw new IOException("下载源不存在: " + url);
         }
         java.nio.file.Files.copy(source.toPath(), destination.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+    }
+
+    private java.io.InputStream openRemoteStream(String url) throws IOException {
+        URL remoteUrl = new URL(url);
+        Proxy proxy = buildProxy(settings.gitProxy());
+        if (proxy == Proxy.NO_PROXY) {
+            return remoteUrl.openStream();
+        }
+        return remoteUrl.openConnection(proxy).getInputStream();
+    }
+
+    private Proxy buildProxy(String proxyUrl) {
+        if (proxyUrl == null || proxyUrl.trim().isEmpty()) {
+            return Proxy.NO_PROXY;
+        }
+
+        try {
+            URI uri = URI.create(proxyUrl.trim());
+            int port = uri.getPort();
+            if (port < 0) {
+                port = "https".equalsIgnoreCase(uri.getScheme()) ? 443 : 80;
+            }
+            return new Proxy(Proxy.Type.HTTP, new InetSocketAddress(uri.getHost(), port));
+        } catch (Exception ignored) {
+            return Proxy.NO_PROXY;
+        }
     }
 
     private Jval readJval(File file) throws IOException {
