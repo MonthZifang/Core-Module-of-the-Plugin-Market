@@ -12,17 +12,21 @@ import java.io.IOException;
 import mindustry.mod.Plugin;
 
 public final class OriginalMarketPlugin extends Plugin {
+    private static final String CONFIG_FOLDER_NAME = "Core Module of the Plugin Market";
+
     private MarketSettings settings;
     private MarketService service;
+    private GitClient gitClient;
 
     @Override
     public void init() {
         try {
-            File dataRoot = new File(mindustry.Vars.dataDirectory.absolutePath(), "mdt-original-market-plugin");
+            File dataRoot = new File("config", CONFIG_FOLDER_NAME);
             settings = MarketSettings.load(dataRoot);
-            service = new MarketService(settings, new GitClient());
+            gitClient = new GitClient();
+            service = new MarketService(settings, gitClient);
 
-            if (!new GitClient().isGitInstalled()) {
+            if (!gitClient.isGitInstalled(settings.gitProxy())) {
                 throw new IllegalStateException("当前环境没有可用的 git 命令。");
             }
 
@@ -31,10 +35,20 @@ public final class OriginalMarketPlugin extends Plugin {
                     service.syncMarket();
                 } catch (IOException exception) {
                     Log.err("市场同步失败，但插件仍继续启动: @", exception.getMessage());
-                    service.loadFromCache();
+                    try {
+                        service.loadFromCache();
+                    } catch (IOException cacheException) {
+                        Log.err("缓存加载失败，插件以空市场模式启动: @", cacheException.getMessage());
+                        service.useEmptyCatalog();
+                    }
                 }
             } else {
-                service.loadFromCache();
+                try {
+                    service.loadFromCache();
+                } catch (IOException exception) {
+                    Log.err("市场缓存不存在，插件以空市场模式启动: @", exception.getMessage());
+                    service.useEmptyCatalog();
+                }
             }
 
             Log.info("MDT 原版插件市场已启动。");
@@ -45,7 +59,7 @@ public final class OriginalMarketPlugin extends Plugin {
 
     @Override
     public void registerServerCommands(CommandHandler handler) {
-        handler.register("插件市场同步", "同步 Git 插件市场仓库并重新扫描。", args -> {
+        handler.register("market-sync", "同步 Git 插件市场仓库并重新扫描。", args -> {
             try {
                 service.syncMarket();
                 Log.info("市场同步完成，共 @ 个插件。", service.registryEntries().size());
@@ -54,7 +68,7 @@ public final class OriginalMarketPlugin extends Plugin {
             }
         });
 
-        handler.register("插件市场列表", "列出插件市场中的全部插件。", args -> {
+        handler.register("market-list", "列出插件市场中的全部插件。", args -> {
             try {
                 for (RegistryEntry entry : service.registryEntries()) {
                     Log.info("[@] @ | @ | @", entry.channel(), entry.name(), entry.displayName(), entry.gitRepository());
@@ -64,7 +78,7 @@ public final class OriginalMarketPlugin extends Plugin {
             }
         });
 
-        handler.register("插件市场信息", "<名称>", "查看指定插件的详细信息。", args -> {
+        handler.register("market-info", "<name>", "查看指定插件的详细信息。", args -> {
             try {
                 PluginMetadata metadata = service.resolvePluginMetadata(args[0]);
                 Log.info(
@@ -80,7 +94,7 @@ public final class OriginalMarketPlugin extends Plugin {
             }
         });
 
-        handler.register("插件市场安装", "<名称> [强制]", "安装单个插件，可选强制安装。", args -> {
+        handler.register("market-install", "<name> [force]", "安装单个插件，可选强制安装。", args -> {
             try {
                 boolean force = isForce(args);
                 if (force && !settings.allowForceInstall()) {
@@ -93,7 +107,7 @@ public final class OriginalMarketPlugin extends Plugin {
             }
         });
 
-        handler.register("插件市场安装全部", "[强制]", "安装市场中的全部插件，可选强制安装。", args -> {
+        handler.register("market-install-all", "[force]", "安装市场中的全部插件，可选强制安装。", args -> {
             try {
                 boolean force = isForce(args);
                 if (force && !settings.allowForceInstall()) {
@@ -108,7 +122,7 @@ public final class OriginalMarketPlugin extends Plugin {
             }
         });
 
-        handler.register("插件市场状态", "查看当前插件市场状态。", args -> {
+        handler.register("market-status", "查看当前插件市场状态。", args -> {
             try {
                 Log.info("market=@ branch=@ cache=@ install=@ entries=@",
                     settings.marketRepository(),
@@ -122,14 +136,14 @@ public final class OriginalMarketPlugin extends Plugin {
             }
         });
 
-        handler.register("插件市场帮助", "显示插件市场命令帮助。", args -> {
+        handler.register("market-help", "显示插件市场命令帮助。", args -> {
             Log.info("插件市场命令：");
-            Log.info("  插件市场同步 - 同步 Git 插件市场仓库并重新扫描");
-            Log.info("  插件市场列表 - 列出市场中的全部插件");
-            Log.info("  插件市场信息 <名称> - 查看指定插件的详细信息");
-            Log.info("  插件市场安装 <名称> [强制] - 安装单个插件");
-            Log.info("  插件市场安装全部 [强制] - 安装全部插件");
-            Log.info("  插件市场状态 - 查看市场缓存、分支与插件数量");
+            Log.info("  market-sync - 同步 Git 插件市场仓库并重新扫描");
+            Log.info("  market-list - 列出市场中的全部插件");
+            Log.info("  market-info <name> - 查看指定插件的详细信息");
+            Log.info("  market-install <name> [force] - 安装单个插件");
+            Log.info("  market-install-all [force] - 安装全部插件");
+            Log.info("  market-status - 查看市场缓存、分支与插件数量");
         });
     }
 

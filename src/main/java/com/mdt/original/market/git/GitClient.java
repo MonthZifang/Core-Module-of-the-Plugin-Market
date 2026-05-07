@@ -9,9 +9,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class GitClient {
-    public void syncRepository(String repositoryUrl, String branch, File targetDir) throws IOException {
+    public void syncRepository(String repositoryUrl, String branch, File targetDir, String proxy) throws IOException {
         if (isGitRepository(targetDir)) {
-            run(targetDir, "git", "-C", targetDir.getAbsolutePath(), "pull", "--ff-only", "origin", branch);
+            run(targetDir, proxy, "git", "-C", targetDir.getAbsolutePath(), "pull", "--ff-only", "origin", branch);
             return;
         }
 
@@ -24,12 +24,12 @@ public final class GitClient {
             throw new IOException("目标目录已存在且不为空，无法执行 git clone: " + targetDir);
         }
 
-        run(parent, "git", "clone", "--branch", branch, "--single-branch", repositoryUrl, targetDir.getAbsolutePath());
+        run(parent, proxy, "git", "clone", "--branch", branch, "--single-branch", repositoryUrl, targetDir.getAbsolutePath());
     }
 
-    public boolean isGitInstalled() {
+    public boolean isGitInstalled(String proxy) {
         try {
-            run(null, "git", "--version");
+            run(null, proxy, "git", "--version");
             return true;
         } catch (IOException exception) {
             return false;
@@ -40,10 +40,16 @@ public final class GitClient {
         return new File(dir, ".git").exists();
     }
 
-    private String run(File workDir, String... command) throws IOException {
+    private String run(File workDir, String proxy, String... command) throws IOException {
         List<String> args = new ArrayList<String>();
         for (String item : command) {
             args.add(item);
+        }
+        if (proxy != null && !proxy.trim().isEmpty() && args.size() > 0 && "git".equals(args.get(0))) {
+            args.add(1, "-c");
+            args.add(2, "http.proxy=" + proxy);
+            args.add(3, "-c");
+            args.add(4, "https.proxy=" + proxy);
         }
 
         ProcessBuilder builder = new ProcessBuilder(args);

@@ -29,7 +29,7 @@
 首次启动后会生成：
 
 ```text
-config/mdt-original-market-plugin/plugin-market.properties
+config/Core Module of the Plugin Market/plugin-market.properties
 ```
 
 主要配置：
@@ -53,6 +53,7 @@ config/mdt-original-market-plugin/plugin-market.properties
 - `market-install <name> [force]`
 - `market-install-all [force]`
 - `market-status`
+- `market-help`
 
 ## 构建
 

@@ -29,12 +29,16 @@ public final class MarketService {
     }
 
     public void syncMarket() throws IOException {
-        gitClient.syncRepository(settings.marketRepository(), settings.marketBranch(), settings.marketCacheDir());
+        gitClient.syncRepository(settings.marketRepository(), settings.marketBranch(), settings.marketCacheDir(), settings.gitProxy());
         this.catalog = loadCatalog();
     }
 
     public void loadFromCache() throws IOException {
         this.catalog = loadCatalog();
+    }
+
+    public void useEmptyCatalog() {
+        this.catalog = new MarketCatalog("unknown", settings.pluginMetadataFile(), new LinkedHashMap<String, RegistryEntry>());
     }
 
     public MarketCatalog catalog() {
@@ -49,7 +53,7 @@ public final class MarketService {
         }
 
         File repoDir = new File(settings.pluginCacheDir(), sanitize(entry.name()));
-        gitClient.syncRepository(entry.gitRepository(), entry.gitBranch(), repoDir);
+        gitClient.syncRepository(entry.gitRepository(), entry.gitBranch(), repoDir, settings.gitProxy());
 
         File metadataFile = new File(repoDir, entry.pluginMetadataFile());
         if (!metadataFile.exists()) {

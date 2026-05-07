@@ -18,6 +18,7 @@ public final class MarketSettings {
     private final File dataRoot;
     private final String marketRepository;
     private final String marketBranch;
+    private final String gitProxy;
     private final String marketCacheDirectory;
     private final String pluginCacheDirectory;
     private final String installDirectory;
@@ -31,6 +32,7 @@ public final class MarketSettings {
         File dataRoot,
         String marketRepository,
         String marketBranch,
+        String gitProxy,
         String marketCacheDirectory,
         String pluginCacheDirectory,
         String installDirectory,
@@ -43,6 +45,7 @@ public final class MarketSettings {
         this.dataRoot = dataRoot;
         this.marketRepository = marketRepository;
         this.marketBranch = marketBranch;
+        this.gitProxy = gitProxy;
         this.marketCacheDirectory = marketCacheDirectory;
         this.pluginCacheDirectory = pluginCacheDirectory;
         this.installDirectory = installDirectory;
@@ -71,6 +74,7 @@ public final class MarketSettings {
 
         String marketRepository = read(properties, "市场仓库", "https://github.com/MonthZifang/mdt-Plugin-Market.git");
         String marketBranch = read(properties, "市场分支", "main");
+        String gitProxy = read(properties, "Git代理", "");
         String marketCacheDirectory = read(properties, "市场缓存目录", "market-cache");
         String pluginCacheDirectory = read(properties, "插件缓存目录", "plugin-cache");
         String installDirectory = read(properties, "安装目录", "config/mods");
@@ -84,6 +88,7 @@ public final class MarketSettings {
             dataRoot,
             marketRepository,
             marketBranch,
+            gitProxy,
             marketCacheDirectory,
             pluginCacheDirectory,
             installDirectory,
@@ -128,6 +133,10 @@ public final class MarketSettings {
 
     public String marketBranch() {
         return marketBranch;
+    }
+
+    public String gitProxy() {
+        return gitProxy;
     }
 
     public File marketCacheDir() {
