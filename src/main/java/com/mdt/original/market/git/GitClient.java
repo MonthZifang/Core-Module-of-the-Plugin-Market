@@ -11,6 +11,7 @@ import java.util.List;
 public final class GitClient {
     public void syncRepository(String repositoryUrl, String branch, File targetDir, String proxy) throws IOException {
         if (isGitRepository(targetDir)) {
+            run(targetDir, proxy, "git", "-C", targetDir.getAbsolutePath(), "remote", "set-url", "origin", repositoryUrl);
             run(targetDir, proxy, "git", "-C", targetDir.getAbsolutePath(), "pull", "--ff-only", "origin", branch);
             return;
         }
