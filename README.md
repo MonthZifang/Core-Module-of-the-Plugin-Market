@@ -5,16 +5,16 @@
     <img src="./md/logo.png" alt="月月岛科技 Logo" width="720" />
   </a>
 
-  <p><strong>月月岛科技维护 MDT Original Market Plugin</strong></p>
+  <p><strong>月月岛科技维护 Core Module of the Plugin Market</strong></p>
 
   <p>
     <a href="https://github.com/MonthZifang/YUEYUEDAO-TECH"><strong>查看月月岛科技详情</strong></a>
   </p>
 </div>
 
-# MDT 原版插件市场插件
+# Core Module of the Plugin Market
 
-这是一个 Mindustry 原版服务器插件，用来读取 Git 市场仓库、扫描固定登记文件，并安装其它插件。
+这是一个 Mindustry 原版服务器插件，用来同步 Git 插件市场、扫描固定登记文件，并安装插件。
 
 ## 固定协议
 
@@ -22,7 +22,7 @@
 2. 再扫描 `src/modded/*.repo.json` 和 `src/native/*.repo.json`
 3. 每个 `*.repo.json` 只登记一个插件仓库
 4. 插件仓库固定读取 `market.plugin.json`
-5. 再根据 `downloadUrls`、`dependencies`、`entry` 等字段完成展示和安装
+5. 再根据 `downloadUrls`、`dependencies`、`entry` 等字段完成展示与安装
 
 ## 配置文件
 
@@ -63,6 +63,6 @@ config/mdt-original-market-plugin/plugin-market.properties
 输出：
 
 ```text
-build/libs/mdt-original-market-plugin.jar
-dist/mdt-original-market-plugin.jar
+build/libs/core-module-of-the-plugin-market.jar
+dist/core-module-of-the-plugin-market.jar
 ```

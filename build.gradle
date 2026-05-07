@@ -59,7 +59,7 @@ tasks.register('syncDist', Copy) {
     dependsOn jar
     from(layout.buildDirectory.file("libs/${project.name}.jar"))
     into(layout.projectDirectory.dir("dist"))
-    rename { "${project.name}.jar" }
+    rename { "core-module-of-the-plugin-market.jar" }
 }
 
 jar.finalizedBy(tasks.named('syncDist'))

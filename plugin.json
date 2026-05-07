@@ -1,7 +1,7 @@
 {
-  "name": "MdtOriginalMarketPlugin",
+  "name": "Core Module of the Plugin Market",
   "author": "monthzifang",
   "main": "com.mdt.original.market.OriginalMarketPlugin",
-  "description": "Mindustry 原版服务器插件市场管理器。",
+  "description": "Core market module for the original Mindustry server.",
   "version": "v1"
 }

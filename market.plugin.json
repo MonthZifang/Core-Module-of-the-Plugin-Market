@@ -1,9 +1,9 @@
 {
   "metadataVersion": 1,
-  "name": "mdt-original-market-plugin",
-  "displayName": "MDT Original Market Plugin",
+  "name": "core-module-of-the-plugin-market",
+  "displayName": "Core Module of the Plugin Market",
   "author": "monthzifang",
-  "description": "Mindustry 原版服务器插件市场插件，用于同步 Git 市场、扫描仓库登记文件并安装插件。",
+  "description": "Core market module for the original Mindustry server. It syncs the Git market, scans registry files, and installs plugins.",
   "version": "v1",
   "requiredMarketVersion": "v1",
   "channel": "native",
@@ -11,10 +11,10 @@
     "original"
   ],
   "downloadUrls": [
-    "https://raw.githubusercontent.com/MonthZifang/mdt-original-market-plugin/main/dist/mdt-original-market-plugin.jar",
-    "https://raw.githubusercontent.com/MonthZifang/mdt-original-market-plugin/main/plugin.json"
+    "https://raw.githubusercontent.com/MonthZifang/Core-Module-of-the-Plugin-Market/main/dist/core-module-of-the-plugin-market.jar",
+    "https://raw.githubusercontent.com/MonthZifang/Core-Module-of-the-Plugin-Market/main/plugin.json"
   ],
   "dependencies": [],
-  "repositoryUrl": "https://github.com/MonthZifang/mdt-original-market-plugin.git",
+  "repositoryUrl": "https://github.com/MonthZifang/Core-Module-of-the-Plugin-Market.git",
   "entry": "com.mdt.original.market.OriginalMarketPlugin"
 }
