@@ -60,30 +60,7 @@ public final class MarketService {
     }
 
     public void installPlugin(String pluginName, boolean force) throws IOException {
-        ensureCatalog();
-        PluginMetadata metadata = resolvePluginMetadata(pluginName);
-        validateInstallable(metadata, force);
-
-        for (String dependency : metadata.dependencies()) {
-            if (!dependency.trim().isEmpty() && !dependency.equalsIgnoreCase(pluginName)) {
-                installPlugin(dependency, force);
-            }
-        }
-
-        File cacheDir = new File(settings.pluginCacheDir(), sanitize(metadata.name()) + File.separator + sanitize(metadata.version()));
-        if (!cacheDir.exists() && !cacheDir.mkdirs()) {
-            throw new IOException("无法创建下载缓存目录: " + cacheDir);
-        }
-
-        for (String url : metadata.downloadUrls()) {
-            File destination = new File(cacheDir, fileNameOf(url));
-            download(url, destination);
-            if (destination.getName().toLowerCase().endsWith(".jar")) {
-                installJar(destination, metadata);
-            }
-        }
-
-        Log.info("已完成安装: @", metadata.displayName());
+        installPlugin(pluginName, force, new java.util.HashSet<String>());
     }
 
     public List<RegistryEntry> registryEntries() {
@@ -183,6 +160,39 @@ public final class MarketService {
         if (catalog == null) {
             throw new IllegalStateException("市场目录尚未加载，请先同步市场。");
         }
+    }
+
+    private void installPlugin(String pluginName, boolean force, java.util.Set<String> stack) throws IOException {
+        ensureCatalog();
+        if (!stack.add(pluginName)) {
+            throw new IOException("检测到循环依赖: " + pluginName);
+        }
+
+        PluginMetadata metadata = resolvePluginMetadata(pluginName);
+        validateInstallable(metadata, force);
+
+        for (String dependency : metadata.dependencies()) {
+            String dependencyName = dependency.trim();
+            if (!dependencyName.isEmpty() && !dependencyName.equalsIgnoreCase(pluginName)) {
+                installPlugin(dependencyName, force, stack);
+            }
+        }
+
+        File cacheDir = new File(settings.pluginCacheDir(), sanitize(metadata.name()) + File.separator + sanitize(metadata.version()));
+        if (!cacheDir.exists() && !cacheDir.mkdirs()) {
+            throw new IOException("无法创建下载缓存目录: " + cacheDir);
+        }
+
+        for (String url : metadata.downloadUrls()) {
+            File destination = new File(cacheDir, fileNameOf(url));
+            download(url, destination);
+            if (destination.getName().toLowerCase().endsWith(".jar")) {
+                installJar(destination, metadata);
+            }
+        }
+
+        Log.info("已完成安装: @", metadata.displayName());
+        stack.remove(pluginName);
     }
 
     private String sanitize(String name) {
