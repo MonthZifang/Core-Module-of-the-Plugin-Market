@@ -21,7 +21,8 @@ public final class OriginalMarketPlugin extends Plugin {
     @Override
     public void init() {
         try {
-            File dataRoot = new File("config", CONFIG_FOLDER_NAME);
+            File modsRoot = new File(mindustry.Vars.dataDirectory.absolutePath(), "mods");
+            File dataRoot = new File(new File(modsRoot, "config"), CONFIG_FOLDER_NAME);
             settings = MarketSettings.load(dataRoot);
             gitClient = new GitClient();
             service = new MarketService(settings, gitClient);

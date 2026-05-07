@@ -29,7 +29,7 @@
 首次启动后会生成：
 
 ```text
-config/Core Module of the Plugin Market/plugin-market.properties
+config/mods/config/Core Module of the Plugin Market/plugin-market.properties
 ```
 
 主要配置：
