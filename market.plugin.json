@@ -1,0 +1,20 @@
+{
+  "metadataVersion": 1,
+  "name": "mdt-original-market-plugin",
+  "displayName": "MDT Original Market Plugin",
+  "author": "monthzifang",
+  "description": "Mindustry 原版服务器插件市场插件，用于同步 Git 市场、扫描仓库登记文件并安装插件。",
+  "version": "v1",
+  "requiredMarketVersion": "v1",
+  "channel": "native",
+  "targets": [
+    "original"
+  ],
+  "downloadUrls": [
+    "https://raw.githubusercontent.com/MonthZifang/mdt-original-market-plugin/main/dist/mdt-original-market-plugin.jar",
+    "https://raw.githubusercontent.com/MonthZifang/mdt-original-market-plugin/main/plugin.json"
+  ],
+  "dependencies": [],
+  "repositoryUrl": "https://github.com/MonthZifang/mdt-original-market-plugin.git",
+  "entry": "com.mdt.original.market.OriginalMarketPlugin"
+}

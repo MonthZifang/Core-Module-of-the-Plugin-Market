@@ -1,0 +1,8 @@
+.gradle/
+build/
+dist/
+cache/
+downloads/
+out/
+Thumbs.db
+Desktop.ini
