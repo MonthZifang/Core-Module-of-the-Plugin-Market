@@ -157,6 +157,28 @@ public final class OriginalMarketPlugin extends Plugin {
             }
         });
 
+        handler.register("market-update", "<name> [force]", "更新本地已安装插件；默认不跨 v 系列自动更新。", args -> {
+            try {
+                boolean force = isForce(args);
+                MarketService.UpdateResult result = service.updatePlugin(args[0], force);
+                Log.info("更新结果: @ | @", result.status(), result.message());
+            } catch (Exception exception) {
+                Log.err("更新失败: @", exception.getMessage());
+            }
+        });
+
+        handler.register("market-update-all", "[force]", "更新全部本地已安装插件；默认不跨 v 系列自动更新。", args -> {
+            try {
+                boolean force = isForce(args);
+                for (RegistryEntry entry : service.registryEntries()) {
+                    MarketService.UpdateResult result = service.updatePlugin(entry.name(), force);
+                    Log.info("更新结果: @ | @ | @", entry.name(), result.status(), result.message());
+                }
+            } catch (Exception exception) {
+                Log.err("批量更新失败: @", exception.getMessage());
+            }
+        });
+
         handler.register("market-status", "查看当前插件市场状态。", args -> {
             try {
                 Log.info("market=@ branch=@ cache=@ install=@ entries=@",
@@ -179,6 +201,8 @@ public final class OriginalMarketPlugin extends Plugin {
             Log.info("  market-install <name> [force] - 安装单个插件");
             Log.info("  market-install-all [force] - 安装全部插件");
             Log.info("  market-uninstall <name> - 删除本地已安装插件");
+            Log.info("  market-update <name> [force] - 更新本地已安装插件");
+            Log.info("  market-update-all [force] - 批量更新本地已安装插件");
             Log.info("  market-status - 查看市场缓存、分支与插件数量");
         });
     }
