@@ -144,6 +144,19 @@ public final class OriginalMarketPlugin extends Plugin {
             }
         });
 
+        handler.register("market-uninstall", "<name>", "删除本地已安装的插件 jar。", args -> {
+            try {
+                boolean removed = service.uninstallPlugin(args[0]);
+                if (removed) {
+                    Log.info("已完成本地删除: @", args[0]);
+                } else {
+                    Log.info("本地未找到可删除的插件 jar: @", args[0]);
+                }
+            } catch (Exception exception) {
+                Log.err("本地删除失败: @", exception.getMessage());
+            }
+        });
+
         handler.register("market-status", "查看当前插件市场状态。", args -> {
             try {
                 Log.info("market=@ branch=@ cache=@ install=@ entries=@",
@@ -165,6 +178,7 @@ public final class OriginalMarketPlugin extends Plugin {
             Log.info("  market-info <name> - 查看指定插件的详细信息");
             Log.info("  market-install <name> [force] - 安装单个插件");
             Log.info("  market-install-all [force] - 安装全部插件");
+            Log.info("  market-uninstall <name> - 删除本地已安装插件");
             Log.info("  market-status - 查看市场缓存、分支与插件数量");
         });
     }

@@ -71,6 +71,28 @@ public final class MarketService {
         installPlugin(pluginName, force, new java.util.HashSet<String>());
     }
 
+    public boolean uninstallPlugin(String pluginName) throws IOException {
+        ensureCatalog();
+        PluginMetadata metadata = resolvePluginMetadata(pluginName);
+        boolean removed = false;
+
+        for (String url : metadata.downloadUrls()) {
+            String fileName = fileNameOf(url);
+            if (!fileName.toLowerCase().endsWith(".jar")) {
+                continue;
+            }
+
+            File target = new File(settings.installDir(), fileName);
+            if (target.exists()) {
+                java.nio.file.Files.delete(target.toPath());
+                Log.info("已删除本地插件 jar: @", target.getAbsolutePath());
+                removed = true;
+            }
+        }
+
+        return removed;
+    }
+
     public List<RegistryEntry> registryEntries() {
         ensureCatalogUnchecked();
         return new ArrayList<RegistryEntry>(catalog.entries().values());
@@ -205,6 +227,12 @@ public final class MarketService {
         PluginMetadata metadata = resolvePluginMetadata(pluginName);
         validateInstallable(metadata, force);
 
+        if (!force && isAlreadyInstalled(metadata)) {
+            Log.info("本地已安装，跳过重复安装: @", metadata.displayName());
+            stack.remove(pluginName);
+            return;
+        }
+
         for (String dependency : metadata.dependencies()) {
             String dependencyName = dependency.trim();
             if (!dependencyName.isEmpty() && !dependencyName.equalsIgnoreCase(pluginName)) {
@@ -227,6 +255,22 @@ public final class MarketService {
 
         Log.info("已完成安装: @", metadata.displayName());
         stack.remove(pluginName);
+    }
+
+    private boolean isAlreadyInstalled(PluginMetadata metadata) {
+        File installDir = settings.installDir();
+        for (String url : metadata.downloadUrls()) {
+            String fileName = fileNameOf(url);
+            if (!fileName.toLowerCase().endsWith(".jar")) {
+                continue;
+            }
+
+            File target = new File(installDir, fileName);
+            if (target.exists()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private String sanitize(String name) {
