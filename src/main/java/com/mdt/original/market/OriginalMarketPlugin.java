@@ -69,13 +69,13 @@ public final class OriginalMarketPlugin extends Plugin {
             }
         });
 
-        handler.register("market-list", "列出插件市场中的全部插件。", args -> {
+        handler.register("market-list", "列出插件市场中的全部插件，不主动下载各插件仓库。", args -> {
             try {
                 for (RegistryEntry entry : service.registryEntries()) {
                     try {
-                        PluginMetadata metadata = service.resolvePluginMetadata(entry.name());
+                        PluginMetadata metadata = service.readCachedPluginMetadata(entry.name());
                         Log.info(
-                            "登记名=@ | 插件名=@ | 显示名=@ | 作者=@ | 版本=@ | 简介=@",
+                            "登记名=@ | 插件名=@ | 显示名=@ | 作者=@ | 版本=@ | 简介=@ | 来源=cache",
                             entry.name(),
                             metadata.name(),
                             metadata.preferredDisplayName(),
@@ -85,12 +85,13 @@ public final class OriginalMarketPlugin extends Plugin {
                         );
                     } catch (Exception metadataException) {
                         Log.info(
-                            "登记名=@ | 显示名=@ | 分类=@ | 仓库=@ | 元数据读取失败=@",
+                            "登记名=@ | 显示名=@ | 作者=@ | 分类=@ | 目标=@ | 仓库=@ | 来源=registry",
                             entry.name(),
                             entry.displayName(),
+                            entry.author(),
                             entry.channel(),
-                            entry.gitRepository(),
-                            metadataException.getMessage()
+                            entry.targets(),
+                            entry.gitRepository()
                         );
                     }
                 }
@@ -194,9 +195,9 @@ public final class OriginalMarketPlugin extends Plugin {
         });
 
         handler.register("market-help", "显示插件市场命令帮助。", args -> {
-            Log.info("插件市场命令：");
+            Log.info("插件市场命令:");
             Log.info("  market-sync - 同步 Git 插件市场仓库并重新扫描");
-            Log.info("  market-list - 列出市场中的全部插件");
+            Log.info("  market-list - 列出市场中的全部插件，不主动同步各插件仓库");
             Log.info("  market-info <name> - 查看指定插件的详细信息");
             Log.info("  market-install <name> [force] - 安装单个插件");
             Log.info("  market-install-all [force] - 安装全部插件");

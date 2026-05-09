@@ -17,11 +17,10 @@ import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Locale;
+import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -54,6 +53,10 @@ public final class MarketService {
     }
 
     public PluginMetadata resolvePluginMetadata(String pluginName) throws IOException {
+        return resolvePluginMetadata(pluginName, true);
+    }
+
+    public PluginMetadata resolvePluginMetadata(String pluginName, boolean syncRepository) throws IOException {
         ensureCatalog();
         RegistryEntry entry = catalog.get(pluginName);
         if (entry == null) {
@@ -61,7 +64,9 @@ public final class MarketService {
         }
 
         File repoDir = new File(settings.pluginCacheDir(), sanitize(entry.name()));
-        gitClient.syncRepository(entry.gitRepository(), entry.gitBranch(), repoDir, settings.gitProxy());
+        if (syncRepository) {
+            gitClient.syncRepository(entry.gitRepository(), entry.gitBranch(), repoDir, settings.gitProxy());
+        }
 
         File metadataFile = new File(repoDir, entry.pluginMetadataFile());
         if (!metadataFile.exists()) {
@@ -69,6 +74,10 @@ public final class MarketService {
         }
 
         return PluginMetadata.fromJval(readJval(metadataFile));
+    }
+
+    public PluginMetadata readCachedPluginMetadata(String pluginName) throws IOException {
+        return resolvePluginMetadata(pluginName, false);
     }
 
     public void installPlugin(String pluginName, boolean force) throws IOException {
@@ -142,10 +151,14 @@ public final class MarketService {
         for (String dirName : root.get("scanDirectories").asArray().map(Jval::asString)) {
             File dir = new File(settings.marketCacheDir(), dirName);
             File[] files = dir.listFiles((currentDir, name) -> name.endsWith(settings.registrySuffix()));
-            if (files == null) continue;
+            if (files == null) {
+                continue;
+            }
             for (File file : files) {
                 RegistryEntry entry = RegistryEntry.fromJval(readJval(file));
-                if (entry.name().isEmpty()) continue;
+                if (entry.name().isEmpty()) {
+                    continue;
+                }
                 entries.put(entry.name(), entry);
             }
         }
@@ -430,7 +443,9 @@ public final class MarketService {
     private String fileNameOf(String url) {
         String clean = url;
         int query = clean.indexOf('?');
-        if (query >= 0) clean = clean.substring(0, query);
+        if (query >= 0) {
+            clean = clean.substring(0, query);
+        }
         int slash = clean.lastIndexOf('/');
         return slash >= 0 ? clean.substring(slash + 1) : clean;
     }
