@@ -9,6 +9,8 @@ import com.mdt.original.market.model.RegistryEntry;
 import com.mdt.original.market.service.MarketService;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import mindustry.mod.Plugin;
 
 public final class OriginalMarketPlugin extends Plugin {
@@ -35,7 +37,7 @@ public final class OriginalMarketPlugin extends Plugin {
                 try {
                     service.syncMarket();
                 } catch (IOException exception) {
-                    Log.err("市场同步失败，但插件仍继续启动: @", exception.getMessage());
+                    Log.err("市场同步失败，但插件继续启动: @", exception.getMessage());
                     try {
                         service.loadFromCache();
                     } catch (IOException cacheException) {
@@ -69,23 +71,24 @@ public final class OriginalMarketPlugin extends Plugin {
             }
         });
 
-        handler.register("market-list", "列出插件市场中的全部插件，不主动下载各插件仓库。", args -> {
+        handler.register("market-list", "列出插件市场中的全部插件，并标注依赖。", args -> {
             try {
                 for (RegistryEntry entry : service.registryEntries()) {
                     try {
                         PluginMetadata metadata = service.readCachedPluginMetadata(entry.name());
                         Log.info(
-                            "登记名=@ | 插件名=@ | 显示名=@ | 作者=@ | 版本=@ | 简介=@ | 来源=cache",
+                            "登记名=@ | 插件名=@ | 显示名=@ | 作者=@ | 版本=@ | 依赖=@ | 简介=@ | 来源=cache",
                             entry.name(),
                             metadata.name(),
                             metadata.preferredDisplayName(),
                             metadata.author(),
                             metadata.version(),
+                            formatDependencies(metadata.dependencies()),
                             metadata.preferredDescription()
                         );
                     } catch (Exception metadataException) {
                         Log.info(
-                            "登记名=@ | 显示名=@ | 作者=@ | 分类=@ | 目标=@ | 仓库=@ | 来源=registry",
+                            "登记名=@ | 显示名=@ | 作者=@ | 分类=@ | 目标=@ | 仓库=@ | 依赖=未声明 | 来源=registry",
                             entry.name(),
                             entry.displayName(),
                             entry.author(),
@@ -100,24 +103,33 @@ public final class OriginalMarketPlugin extends Plugin {
             }
         });
 
-        handler.register("market-info", "<name>", "查看指定插件的详细信息。", args -> {
+        handler.register("market-info", "<name>", "查看指定插件的详细信息与依赖。", args -> {
             try {
                 RegistryEntry entry = service.catalog().get(args[0]);
                 PluginMetadata metadata = service.resolvePluginMetadata(args[0]);
                 if (entry != null) {
-                    Log.info("登记名=@ | 登记显示名=@ | 登记分类=@ | 登记仓库=@", entry.name(), entry.displayName(), entry.channel(), entry.gitRepository());
+                    Log.info(
+                        "登记名=@ | 登记显示名=@ | 登记分类=@ | 登记仓库=@",
+                        entry.name(), entry.displayName(), entry.channel(), entry.gitRepository()
+                    );
                 }
                 Log.info("插件名=@ | 显示名=@ | 作者=@", metadata.name(), metadata.preferredDisplayName(), metadata.author());
-                Log.info("版本=@ | 需求市场版本=@ | 分类=@ | 目标端=@", metadata.version(), metadata.requiredMarketVersion(), metadata.channel(), metadata.targets());
+                Log.info(
+                    "版本=@ | 需要市场版本=@ | 分类=@ | 目标端=@",
+                    metadata.version(), metadata.requiredMarketVersion(), metadata.channel(), metadata.targets()
+                );
                 Log.info("简介=@", metadata.preferredDescription());
-                Log.info("依赖=@ | 入口类=@ | 仓库=@", metadata.dependencies(), metadata.entry(), metadata.repositoryUrl());
+                Log.info(
+                    "依赖=@ | 入口类=@ | 仓库=@",
+                    formatDependencies(metadata.dependencies()), metadata.entry(), metadata.repositoryUrl()
+                );
                 Log.info("下载链接=@", metadata.downloadUrls());
             } catch (Exception exception) {
                 Log.err("查看插件信息失败: @", exception.getMessage());
             }
         });
 
-        handler.register("market-install", "<name> [force]", "安装单个插件，可选强制安装。", args -> {
+        handler.register("market-install", "<name> [force]", "安装单个插件，并自动安装它的依赖。", args -> {
             try {
                 boolean force = isForce(args);
                 if (force && !settings.allowForceInstall()) {
@@ -158,7 +170,7 @@ public final class OriginalMarketPlugin extends Plugin {
             }
         });
 
-        handler.register("market-update", "<name> [force]", "更新本地已安装插件；默认不跨 v 系列自动更新。", args -> {
+        handler.register("market-update", "<name> [force]", "更新本地已安装插件，默认不跨 v 系列自动更新。", args -> {
             try {
                 boolean force = isForce(args);
                 MarketService.UpdateResult result = service.updatePlugin(args[0], force);
@@ -168,7 +180,7 @@ public final class OriginalMarketPlugin extends Plugin {
             }
         });
 
-        handler.register("market-update-all", "[force]", "更新全部本地已安装插件；默认不跨 v 系列自动更新。", args -> {
+        handler.register("market-update-all", "[force]", "更新全部本地已安装插件，默认不跨 v 系列自动更新。", args -> {
             try {
                 boolean force = isForce(args);
                 for (RegistryEntry entry : service.registryEntries()) {
@@ -197,9 +209,9 @@ public final class OriginalMarketPlugin extends Plugin {
         handler.register("market-help", "显示插件市场命令帮助。", args -> {
             Log.info("插件市场命令:");
             Log.info("  market-sync - 同步 Git 插件市场仓库并重新扫描");
-            Log.info("  market-list - 列出市场中的全部插件，不主动同步各插件仓库");
-            Log.info("  market-info <name> - 查看指定插件的详细信息");
-            Log.info("  market-install <name> [force] - 安装单个插件");
+            Log.info("  market-list - 列出市场中的全部插件，并显示依赖");
+            Log.info("  market-info <name> - 查看指定插件的详细信息与依赖");
+            Log.info("  market-install <name> [force] - 安装单个插件并自动安装依赖");
             Log.info("  market-install-all [force] - 安装全部插件");
             Log.info("  market-uninstall <name> - 删除本地已安装插件");
             Log.info("  market-update <name> [force] - 更新本地已安装插件");
@@ -215,5 +227,18 @@ public final class OriginalMarketPlugin extends Plugin {
             }
         }
         return false;
+    }
+
+    private String formatDependencies(List<String> dependencies) {
+        if (dependencies == null || dependencies.isEmpty()) {
+            return "无";
+        }
+        List<String> values = new ArrayList<String>();
+        for (String dependency : dependencies) {
+            if (dependency != null && !dependency.trim().isEmpty()) {
+                values.add(dependency.trim());
+            }
+        }
+        return values.isEmpty() ? "无" : String.join(", ", values);
     }
 }

@@ -5,8 +5,8 @@
   "displayNameZh": "插件市场核心模块",
   "author": "monthzifang",
   "description": "Core market module for the original Mindustry server. It syncs the Git market, scans registry files, and installs plugins.",
-  "descriptionZh": "用于 Mindustry 原版服务端的插件市场核心模块，可同步 Git 市场、扫描登记文件并安装插件。",
-  "version": "v1",
+  "descriptionZh": "用于 Mindustry 原版服务器的插件市场核心模块，可同步 Git 市场、扫描登记文件并安装插件。",
+  "version": "V1.2.0 - 157X - 2026x5-9",
   "requiredMarketVersion": "v1",
   "channel": "native",
   "targets": [

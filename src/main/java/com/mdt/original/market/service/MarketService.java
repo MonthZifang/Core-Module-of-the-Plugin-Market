@@ -70,7 +70,7 @@ public final class MarketService {
 
         File metadataFile = new File(repoDir, entry.pluginMetadataFile());
         if (!metadataFile.exists()) {
-            throw new IOException("插件仓库缺少固定元数据文件: " + metadataFile);
+            throw new IOException("插件仓库缺少元数据文件: " + metadataFile.getAbsolutePath());
         }
 
         return PluginMetadata.fromJval(readJval(metadataFile));
@@ -91,7 +91,7 @@ public final class MarketService {
 
         for (String url : metadata.downloadUrls()) {
             String fileName = fileNameOf(url);
-            if (!fileName.toLowerCase().endsWith(".jar")) {
+            if (!fileName.toLowerCase(Locale.ROOT).endsWith(".jar")) {
                 continue;
             }
 
@@ -124,7 +124,7 @@ public final class MarketService {
 
         int compare = compareVersions(localVersion, remoteVersion);
         if (!force && compare >= 0) {
-            return new UpdateResult(UpdateStatus.UP_TO_DATE, "本地已是最新版本或更高版本。");
+            return new UpdateResult(UpdateStatus.UP_TO_DATE, "本地已经是最新版本或更高版本。");
         }
 
         installPluginDependencies(remote, force, new java.util.HashSet<String>());
@@ -140,7 +140,7 @@ public final class MarketService {
     private MarketCatalog loadCatalog() throws IOException {
         File marketJson = new File(settings.marketCacheDir(), settings.marketConfigFile());
         if (!marketJson.exists()) {
-            throw new IOException("市场配置文件不存在: " + marketJson);
+            throw new IOException("市场配置文件不存在: " + marketJson.getAbsolutePath());
         }
 
         Jval root = readJval(marketJson);
@@ -171,10 +171,10 @@ public final class MarketService {
         boolean versionMatch = marketVersion.equals(metadata.version()) && marketVersion.equals(metadata.requiredMarketVersion());
         if (!versionMatch && !force) {
             throw new IOException(
-                "插件版本不匹配，插件版本=" + metadata.version() +
-                "，需求市场版本=" + metadata.requiredMarketVersion() +
-                "，当前市场版本=" + marketVersion +
-                "。如果你仍然要安装，请使用强制安装。"
+                "插件版本不匹配，插件版本=" + metadata.version()
+                    + "，需要市场版本=" + metadata.requiredMarketVersion()
+                    + "，当前市场版本=" + marketVersion
+                    + "。如果仍然要安装，请使用强制安装。"
             );
         }
     }
@@ -182,7 +182,7 @@ public final class MarketService {
     private void installJar(File jarFile, PluginMetadata metadata) throws IOException {
         File installDir = settings.installDir();
         if (!installDir.exists() && !installDir.mkdirs()) {
-            throw new IOException("无法创建安装目录: " + installDir);
+            throw new IOException("无法创建安装目录: " + installDir.getAbsolutePath());
         }
 
         File target = new File(installDir, jarFile.getName());
@@ -271,20 +271,21 @@ public final class MarketService {
         validateInstallable(metadata, force);
 
         if (!force && isAlreadyInstalled(metadata)) {
-            Log.info("本地已安装，跳过重复安装: @", metadata.displayName());
+            Log.info("本地已安装，跳过重复安装: @", metadata.preferredDisplayName());
             stack.remove(pluginName);
             return;
         }
 
         for (String dependency : metadata.dependencies()) {
-            String dependencyName = dependency.trim();
+            String dependencyName = dependency == null ? "" : dependency.trim();
             if (!dependencyName.isEmpty() && !dependencyName.equalsIgnoreCase(pluginName)) {
+                Log.info("安装插件 @ 前，先自动安装依赖 @", metadata.preferredDisplayName(), dependencyName);
                 installPlugin(dependencyName, force, stack);
             }
         }
-        downloadAndInstall(metadata);
 
-        Log.info("已完成安装: @", metadata.displayName());
+        downloadAndInstall(metadata);
+        Log.info("已完成安装: @", metadata.preferredDisplayName());
         stack.remove(pluginName);
     }
 
@@ -293,8 +294,9 @@ public final class MarketService {
             throw new IOException("检测到循环依赖: " + metadata.name());
         }
         for (String dependency : metadata.dependencies()) {
-            String dependencyName = dependency.trim();
+            String dependencyName = dependency == null ? "" : dependency.trim();
             if (!dependencyName.isEmpty() && !dependencyName.equalsIgnoreCase(metadata.name())) {
+                Log.info("更新插件 @ 前，先自动处理依赖 @", metadata.preferredDisplayName(), dependencyName);
                 installPlugin(dependencyName, force, stack);
             }
         }
@@ -304,13 +306,13 @@ public final class MarketService {
     private void downloadAndInstall(PluginMetadata metadata) throws IOException {
         File cacheDir = new File(settings.pluginCacheDir(), sanitize(metadata.name()) + File.separator + sanitize(metadata.version()));
         if (!cacheDir.exists() && !cacheDir.mkdirs()) {
-            throw new IOException("无法创建下载缓存目录: " + cacheDir);
+            throw new IOException("无法创建下载缓存目录: " + cacheDir.getAbsolutePath());
         }
 
         for (String url : metadata.downloadUrls()) {
             File destination = new File(cacheDir, fileNameOf(url));
             download(url, destination);
-            if (destination.getName().toLowerCase().endsWith(".jar")) {
+            if (destination.getName().toLowerCase(Locale.ROOT).endsWith(".jar")) {
                 installJar(destination, metadata);
             }
         }
@@ -320,7 +322,7 @@ public final class MarketService {
         File installDir = settings.installDir();
         for (String url : metadata.downloadUrls()) {
             String fileName = fileNameOf(url);
-            if (!fileName.toLowerCase().endsWith(".jar")) {
+            if (!fileName.toLowerCase(Locale.ROOT).endsWith(".jar")) {
                 continue;
             }
 
@@ -336,7 +338,7 @@ public final class MarketService {
         File installDir = settings.installDir();
         for (String url : metadata.downloadUrls()) {
             String fileName = fileNameOf(url);
-            if (!fileName.toLowerCase().endsWith(".jar")) {
+            if (!fileName.toLowerCase(Locale.ROOT).endsWith(".jar")) {
                 continue;
             }
 
@@ -415,11 +417,7 @@ public final class MarketService {
         int[] numbers = new int[parts.length];
         for (int i = 0; i < parts.length; i++) {
             String digits = parts[i].replaceAll("[^0-9]", "");
-            if (digits.isEmpty()) {
-                numbers[i] = 0;
-            } else {
-                numbers[i] = Integer.parseInt(digits);
-            }
+            numbers[i] = digits.isEmpty() ? 0 : Integer.parseInt(digits);
         }
         return numbers;
     }
